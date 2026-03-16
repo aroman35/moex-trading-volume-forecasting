@@ -14,6 +14,7 @@
 - [Формулы расчёта производных признаков](#формулы-расчёта-производных-признаков)
 - [Источники данных](#источники-данных)
 - [Формируемые артефакты](#формируемые-артефакты)
+- [CSV-артефакты моделирования и анализа](#csv-артефакты-моделирования-и-анализа)
 - [Зависимости](#зависимости)
 - [Лицензия](#лицензия)
 
@@ -115,7 +116,7 @@ python main.py structural
 
 Ниже приведены CSV, которые формируются после скачивания и агрегации исходных данных.
 
-### `moex_monthly.csv`
+### moex_monthly.csv
 
 Месячный ряд, построенный только из данных IMOEX.
 
@@ -127,7 +128,7 @@ python main.py structural
 | `rv` | `float` | Реализованная волатильность $RV_t$: сумма квадратов дневных лог-доходностей за месяц |
 | `trading_days` | `int` | Количество торговых дней $trading\_days_t$ в месяце |
 
-### `moex_macro_monthly.csv`
+### moex_macro_monthly.csv
 
 Основной модельный датасет, в котором к ряду IMOEX добавлены внешние предикторы.
 
@@ -236,22 +237,76 @@ $$
 
 | Файл | Описание | Как получить |
 | --- | --- | --- |
-| `moex_monthly.csv` | Месячный ряд по данным IMOEX без внешних предикторов | `python main.py dataset` |
-| `moex_macro_monthly.csv` | Основной модельный датасет с макроэкономическими предикторами | `python main.py dataset` |
+| [`moex_monthly.csv`](#moex_monthlycsv) | Месячный ряд по данным IMOEX без внешних предикторов | `python main.py dataset` |
+| [`moex_macro_monthly.csv`](#moex_macro_monthlycsv) | Основной модельный датасет с макроэкономическими предикторами | `python main.py dataset` |
 | `plot_series.png` | 4 графика временного ряда: исходный ряд, логарифм, первая и сезонная разности | `python main.py plots` |
 | `plot_stl.png` | STL-декомпозиция логарифма объёма торгов | `python main.py plots` |
 | `plot_acf.png` | ACF и PACF для $log\_volume_t$ | `python main.py plots` |
 | `plot_acf_diff.png` | ACF и PACF для первой разности $log\_volume_t$ | `python main.py plots` |
-| `stationarity_results.csv` | Результаты тестов ADF и KPSS для исходного, логарифмированного и дифференцированного рядов | `python main.py stationarity` |
-| `forecasts.csv` | Прогнозы всех моделей на test-периоде | `python main.py models` |
-| `metrics.csv` | Сравнение моделей по метрикам RMSE и MAE | `python main.py models` |
+| [`stationarity_results.csv`](#stationarity_resultscsv) | Результаты тестов ADF и KPSS для исходного, логарифмированного и дифференцированного рядов | `python main.py stationarity` |
+| [`forecasts.csv`](#forecastscsv) | Прогнозы всех моделей на test-периоде | `python main.py models` |
+| [`metrics.csv`](#metricscsv) | Сравнение моделей по метрикам RMSE и MAE | `python main.py models` |
 | `plot_forecasts.png` | График факта и прогнозов всех моделей на test-периоде | `python main.py models` |
 | `plot_residuals.png` | Диагностика остатков лучшего ансамбля на train-периоде | `python main.py best-model` |
-| `forecast_2yr.csv` | Двухлетний прогноз лучшего ансамбля с интервалами 95% | `python main.py best-model` |
+| [`forecast_2yr.csv`](#forecast_2yrcsv) | Двухлетний прогноз лучшего ансамбля с интервалами 95% | `python main.py best-model` |
 | `plot_forecast_2yr.png` | График двухлетнего прогноза лучшего ансамбля | `python main.py best-model` |
 | `plot_cusum.png` | CUSUM-график для остатков SARIMA-модели | `python main.py structural` |
 | `plot_anomalies.png` | График аномалий, выявленных по STL-остаткам | `python main.py structural` |
 | `plot_counterfactual.png` | Контрфактический прогноз для оценки эффекта шока 2022 года | `python main.py structural` |
+
+## CSV-артефакты моделирования и анализа
+
+### stationarity_results.csv
+
+Результаты тестов стационарности для исходного ряда, логарифма и первой разности логарифма.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `series` | `string` | Название анализируемого ряда |
+| `test` | `string` | Название теста: `ADF` или `KPSS` |
+| `statistic` | `float` | Значение тестовой статистики |
+| `p_value` | `float` | p-value теста |
+| `crit_1pct` | `float` | Критическое значение на уровне 1% |
+| `crit_5pct` | `float` | Критическое значение на уровне 5% |
+| `crit_10pct` | `float` | Критическое значение на уровне 10% |
+| `conclusion` | `string` | Вывод о стационарности ряда |
+
+### forecasts.csv
+
+Таблица прогнозов моделей на test-периоде.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `date` | `YYYY-MM-DD` | Дата прогноза |
+| `actual` | `float` | Фактическое значение месячного объёма торгов |
+| `naive` | `float` | Прогноз сезонной наивной модели |
+| `ets` | `float` | Прогноз ETS-модели |
+| `theta` | `float` | Прогноз тета-метода |
+| `sarima` | `float` | Прогноз SARIMA-модели |
+| `arimax` | `float` | Прогноз ARIMAX-модели |
+| `rf` | `float` | Прогноз случайного леса |
+| `ensemble` | `float` | Усреднённый прогноз ансамбля |
+
+### metrics.csv
+
+Сводная таблица качества прогнозов моделей.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `model` | `string` | Название модели |
+| `RMSE` | `float` | Корень из средней квадратической ошибки в исходном масштабе |
+| `MAE` | `float` | Средняя абсолютная ошибка в исходном масштабе |
+
+### forecast_2yr.csv
+
+Двухлетний прогноз лучшей ансамблевой модели.
+
+| Поле | Тип | Описание |
+| --- | --- | --- |
+| `date` | `YYYY-MM-DD` | Дата прогноза |
+| `forecast` | `float` | Прогноз ансамбля в исходном масштабе |
+| `lower_95` | `float` | Нижняя граница 95% интервала |
+| `upper_95` | `float` | Верхняя граница 95% интервала |
 
 ## Зависимости
 
